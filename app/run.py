@@ -1,6 +1,8 @@
 import json
 import plotly
 import pandas as pd
+from glob import glob
+import re
 
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
@@ -25,13 +27,8 @@ def tokenize(text):
 
     return clean_tokens
 
-# load data
-engine = create_engine('sqlite:///../data/YourDatabaseName.db')
-df = pd.read_sql_table('YourTableName', engine)
-
-# load model
-model = joblib.load("../models/your_model_name.pkl")
-
+engine = create_engine('sqlite:///{}'.format('data/DiasterResponse.db'))
+df = pd.read_sql_table('messages', con=engine)
 
 # index webpage displays cool visuals and receives user input text for model
 @app.route('/')
@@ -78,11 +75,18 @@ def index():
 @app.route('/go')
 def go():
     # save user input in query
-    query = request.args.get('query', '') 
-
-    # use model to predict classification for query
-    classification_labels = model.predict([query])[0]
-    classification_results = dict(zip(df.columns[4:], classification_labels))
+    query = request.args.get('query', '')
+    
+    # load model
+    models = glob('models/*.pkl')
+    classification_results = {}
+    for model in models:
+        try:
+            model = joblib.load(model)
+            name = re.search(r'_(\w+).pkl', model).group(1)
+            classification_results[name] = model.predict([query])[0]
+        except:
+            print('Invalid query')
 
     # This will render the go.html Please see that file. 
     return render_template(
