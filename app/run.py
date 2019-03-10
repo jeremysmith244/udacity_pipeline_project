@@ -48,7 +48,7 @@ def tokenize(text):
 
 
 # connect to sql database, get data into pandas dataframe
-engine = create_engine('sqlite:///{}'.format('data/DiasterResponse.db'))
+engine = create_engine('sqlite:///{}'.format('data/DisasterResponse.db'))
 df = pd.read_sql_table('messages', con=engine)
 X = df['message'].apply(tokenize)
 
