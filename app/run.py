@@ -16,6 +16,7 @@ from sqlalchemy import create_engine
 
 app = Flask(__name__)
 
+
 def tokenize(text):
     tokens = word_tokenize(text)
     lemmatizer = WordNetLemmatizer()
@@ -27,21 +28,21 @@ def tokenize(text):
 
     return clean_tokens
 
+
 engine = create_engine('sqlite:///{}'.format('data/DiasterResponse.db'))
 df = pd.read_sql_table('messages', con=engine)
+
 
 # index webpage displays cool visuals and receives user input text for model
 @app.route('/')
 @app.route('/index')
 def index():
-    
     # extract data needed for visuals
-    # TODO: Below is an example - modify to extract data for your own visuals
-    genre_counts = df.groupby('genre').count()['message']
-    genre_names = list(genre_counts.index)
-    
+    data = df.iloc[:, 4:]
+    genre_counts = data.sum().values
+    genre_names = data.columns
+
     # create visuals
-    # TODO: Below is an example - modify to create your own visuals
     graphs = [
         {
             'data': [
@@ -52,7 +53,7 @@ def index():
             ],
 
             'layout': {
-                'title': 'Distribution of Message Genres',
+                'title': 'Distribution of Message Classifications',
                 'yaxis': {
                     'title': "Count"
                 },
@@ -62,11 +63,11 @@ def index():
             }
         }
     ]
-    
+
     # encode plotly graphs in JSON
     ids = ["graph-{}".format(i) for i, _ in enumerate(graphs)]
     graphJSON = json.dumps(graphs, cls=plotly.utils.PlotlyJSONEncoder)
-    
+
     # render web page with plotly graphs
     return render_template('master.html', ids=ids, graphJSON=graphJSON)
 
@@ -76,19 +77,16 @@ def index():
 def go():
     # save user input in query
     query = request.args.get('query', '')
-    
+
     # load model
     models = glob('models/*.pkl')
     classification_results = {}
     for model in models:
-        try:
-            model = joblib.load(model)
-            name = re.search(r'_(\w+).pkl', model).group(1)
-            classification_results[name] = model.predict([query])[0]
-        except:
-            print('Invalid query')
+        model = joblib.load(model)
+        name = re.search(r'_(\w+).pkl', model).group(1)
+        classification_results[name] = model.predict(query)
 
-    # This will render the go.html Please see that file. 
+    # This will render the go.html Please see that file.
     return render_template(
         'go.html',
         query=query,
