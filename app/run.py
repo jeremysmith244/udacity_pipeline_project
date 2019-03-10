@@ -24,6 +24,12 @@ def tokenize(text):
     text = text.lower().strip()
     text = re.sub(r'[^a-zA-Z0-9]', ' ', text)
 
+    # extract and replace urls
+    url_regex = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
+    detected_urls = re.findall(url_regex, text)
+    for url in detected_urls:
+        text = text.replace(url, "urlplaceholder")
+
     # tokenize text
     tokens = word_tokenize(text)
 

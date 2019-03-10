@@ -10,13 +10,15 @@ There are three python functions important to this project. One which does the
 cleaning and building of a sql database, one which fits the supervised learning
 model, and one which controls the flask website. These are described below.
 
+Note that the fitting is heavily biased towards recall (using an F10 score to train the grid search), since in a disaster situation you would rather not miss many important messages.
+
 ### Instructions:
 1. Run the following commands in the project's root directory to set up your database and model.
 
     - To run ETL pipeline that cleans data and stores in database
-        `python data/process_data.py data/disaster_messages.csv data/disaster_categories.csv data/DisasterResponse.db`
+        `python data/process_data.py data/disaster_messages.csv data/disaster_categories.csv data/DisasterResponse`
     - To run ML pipeline that trains classifier, summarizes fit quality and saves
-        `python models/train_classifier.py data/DisasterResponse.db models/classifier.pkl`
+        `python models/train_classifier.py data/DisasterResponse.db models/classifier`
     - After running this command the models will exist in models folder
 
 2. Run the following command in the app's directory to run your web app.

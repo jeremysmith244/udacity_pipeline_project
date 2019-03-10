@@ -22,6 +22,12 @@ def tokenize(text):
     text = text.lower().strip()
     text = re.sub(r'[^a-zA-Z0-9]', ' ', text)
 
+    # extract and replace urls
+    url_regex = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
+    detected_urls = re.findall(url_regex, text)
+    for url in detected_urls:
+        text = text.replace(url, "urlplaceholder")
+
     # tokenize text
     tokens = word_tokenize(text)
 
@@ -60,10 +66,10 @@ def build_model():
     # define parameters for grid search
     parameters = {
         'vect__stop_words': ['english'],
-        'vect__max_features': [200, 1000, 5000],
+        'vect__max_features': [1000, 5000, 20000],
         'vect__max_df': [0.75, 1.0],
         'clf__n_estimators': [10],
-        'clf__min_samples_split': [8, 16, 32],
+        'clf__min_samples_split': [8, 32],
         'clf__max_depth': [None],
         'clf__criterion': ['gini']
     }
