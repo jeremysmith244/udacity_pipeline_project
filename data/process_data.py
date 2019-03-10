@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 
 
 def load_data(messages_filepath, categories_filepath):
-    '''Takes input files and returns dataframe'''
+    # load the two files, merge into one dataframe
     messages = pd.read_csv(messages_filepath)
     categories = pd.read_csv(categories_filepath)
     df = messages.merge(categories, on='id')
@@ -14,7 +14,6 @@ def load_data(messages_filepath, categories_filepath):
 
 
 def clean_data(df):
-    '''Takes dataframe and cleans formating, returns cleaned df'''
     # split the categories out into indvidual columns
     categories = df['categories'].str.split(';', expand=True)
 
@@ -41,7 +40,6 @@ def clean_data(df):
 
 
 def save_data(df, database_filename):
-    '''Takes clean dataframe and saves dataframe to sql database'''
     # make conneciton to sql, save data as messages table
     engine = create_engine('sqlite:///{}.db'.format(database_filename))
     df.to_sql('messages', con=engine, index=False,
@@ -50,7 +48,6 @@ def save_data(df, database_filename):
 
 
 def main():
-    '''Solicit user input to run open, clean, save sequence'''
     if len(sys.argv) == 4:
 
         messages_filepath, categories_filepath, database_filepath = sys.argv[1:]

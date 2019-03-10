@@ -17,7 +17,7 @@ nltk.download(['punkt', 'wordnet'])
 
 
 def tokenize(text):
-    '''Takes string, normalizes, tokenizes, lemmatizes and returns string'''
+
     # normalize text to lowercase, drop punctuation
     text = text.lower().strip()
     text = re.sub(r'[^a-zA-Z0-9]', ' ', text)
@@ -46,7 +46,7 @@ def tokenize(text):
 
 
 def load_data(database_filepath):
-    '''Connect to db, extract and clean X, y and categories for fitting'''
+
     # load data from database
     engine = create_engine('sqlite:///{}'.format(database_filepath))
     df = pd.read_sql_table('messages', con=engine)
@@ -62,7 +62,7 @@ def load_data(database_filepath):
 
 
 def build_model():
-    '''Build gridsearch model around tfidf transformed randomforest'''
+
     # define parameters for grid search
     parameters = {
         'vect__stop_words': ['english'],
@@ -95,7 +95,6 @@ def build_model():
 
 
 def evaluate_model(model, x_test, y, category_name):
-    '''Evaluate model for a given category, print scores'''
     # get only the category to be predicted for this model and predict
     y_test = y[category_name]
     y_pred = model.predict(x_test)
@@ -119,15 +118,12 @@ def evaluate_model(model, x_test, y, category_name):
 
 
 def save_model(model, model_filepath, category):
-    '''Save model as pickle file'''
     # save file for this model using pickle
     with open(model_filepath + '_' + category + '.pkl', 'wb') as picklefile:
         pickle.dump(model, picklefile)
-    pass
 
 
 def main():
-    '''Solicit user input to run build, train, evaluate sequence'''
     # make sure appropriate input passed, load data and split
     if len(sys.argv) == 3:
         database_filepath, model_filepath = sys.argv[1:]
