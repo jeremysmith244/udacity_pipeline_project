@@ -19,7 +19,7 @@ app = Flask(__name__)
 
 
 def tokenize(text):
-
+    '''Takes string, normalizes, tokenizes, lemmatizes and returns string'''
     # normalize text to lowercase, drop punctuation
     text = text.lower().strip()
     text = re.sub(r'[^a-zA-Z0-9]', ' ', text)
@@ -57,6 +57,7 @@ X = df['message'].apply(tokenize)
 @app.route('/')
 @app.route('/index')
 def index():
+    '''Generates plotly visualizations for website'''
     # extract data needed for visual 1
     data = df.iloc[:, 4:]
     genre_counts = data.sum().values
@@ -77,8 +78,8 @@ def index():
         top_words.append(tup[0])
         words_freq.append(tup[1])
 
-    # create plotly graph showing number of messages in each category
     graphs = [
+        # create plotly graph showing number of messages in each category
         {
             'data': [
                 Bar(
@@ -97,7 +98,7 @@ def index():
                 }
             }
         },
-
+        # create plotly graph showing top 20 words in corpus
         {
             'data': [
                 Bar(
