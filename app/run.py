@@ -84,7 +84,7 @@ def go():
         try:
             model = joblib.load(model)
             name = re.search(r'_(\w+).pkl', model).group(1)
-            classification_results[name] = model.predict([query])[0]
+            classification_results[name] = model.predict(query)
         except:
             print('Invalid query')
 
