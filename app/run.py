@@ -82,9 +82,9 @@ def go():
     models = glob('models/*.pkl')
     classification_results = {}
     for model in models:
-        model = joblib.load(model)
         name = re.search(r'_(\w+).pkl', model).group(1)
-        classification_results[name] = model.predict(query)
+        model = joblib.load(model)
+        classification_results[name] = model.predict([query])[0]
 
     # This will render the go.html Please see that file.
     return render_template(
