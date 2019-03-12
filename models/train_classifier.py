@@ -3,10 +3,11 @@ import pandas as pd
 import numpy as np
 from sqlalchemy import create_engine
 from sklearn.pipeline import Pipeline
-from sklearn.metrics import confusion_matrix, make_scorer, fbeta_score, recall_score, precision_score
+from sklearn.metrics import make_scorer, fbeta_score, classification_report
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
+from sklearn.multioutput import MultiOutputClassifier
 from nltk.tokenize import word_tokenize
 from nltk.stem.wordnet import WordNetLemmatizer
 import re
@@ -46,7 +47,7 @@ def load_data(database_filepath):
     df = pd.read_sql_table('messages', con=engine)
 
     # split into X an y, apply tokenizer to X data
-    X = df['message'].apply(tokenize)
+    X = df['message']
     y = df.iloc[:, 4:]
 
     # summarize categories
@@ -60,23 +61,23 @@ def build_model():
     # define parameters for grid search
     parameters = {
         'vect__stop_words': ['english'],
-        'vect__max_features': [1000, 5000, 20000],
-        'vect__max_df': [0.6, 1.0],
-        'clf__n_estimators': [10],
-        'clf__min_samples_split': [8, 16, 32],
-        'clf__max_depth': [None],
-        'clf__criterion': ['gini']
+        'vect__max_features': [1000, 5000, 10000],
+        'vect__max_df': [0.7, 1.0],
+        'clf__estimator__n_estimators': [10],
+        'clf__estimator__min_samples_split': [8, 11, 16],
+        'clf__estimator__max_depth': [None],
+        'clf__estimator__criterion': ['gini']
     }
-
-    # create scorer to select recall biased model
-    scorer = make_scorer(fbeta_score, beta=10)
 
     # create pipeline
     pipeline = Pipeline([
-        ('vect', CountVectorizer()),
+        ('vect', CountVectorizer(tokenizer=tokenize)),
         ('tfidf', TfidfTransformer()),
-        ('clf', RandomForestClassifier()),
+        ('clf', MultiOutputClassifier(RandomForestClassifier())),
     ])
+
+    # make recall biased scorer
+    scorer = make_scorer(fbeta_score, beta=3, average='macro')
 
     # wrap pipeline in grid search
     model = GridSearchCV(
@@ -88,34 +89,23 @@ def build_model():
     return model
 
 
-def evaluate_model(model, x_test, y, category_name):
-    '''Evaluate model for a given category, print scores'''
-    # get only the category to be predicted for this model and predict
-    y_test = y[category_name]
-    y_pred = model.predict(x_test)
-    labels = np.unique(y_pred)
+def test_model(model, y_test, X_test):
 
-    # evaluate the confusion matrix, f10, accuracy, recall and precision
-    confusion_mat = confusion_matrix(y_test, y_pred, labels=labels)
-    accuracy = (y_pred == y_test).mean()
-    fscore = fbeta_score(y_test, y_pred, 10)
-    recall = recall_score(y_test, y_pred)
-    precision = precision_score(y_test, y_pred)
+    y_preds = model.predict(X_test)
 
-    # print outputs
-    print("Category was:", category_name)
-    print("Labels:", labels)
-    print("Confusion Matrix:\n", confusion_mat)
-    print("Accuracy:", accuracy)
-    print("F10 Score:", fscore)
-    print("Recall Score:", recall)
-    print("Precision Score:", precision)
+    for i, column in enumerate(y_test):
+
+        true_val = y_test[column]
+        pred_val = y_preds[:, i]
+        print('Score for {}: \n'.format(column))
+        print(classification_report(true_val, pred_val))
+        print(40*'-')
 
 
-def save_model(model, model_filepath, category):
+def save_model(model, model_filepath):
     '''Save model as pickle file'''
     # save file for this model using pickle
-    with open(model_filepath + '_' + category + '.pkl', 'wb') as picklefile:
+    with open(model_filepath + '.pkl', 'wb') as picklefile:
         pickle.dump(model, picklefile)
     pass
 
@@ -129,28 +119,30 @@ def main():
         X, Y, category_names = load_data(database_filepath)
         X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2)
 
+        for column in Y_train.columns:
+            if Y_train[column].unique().shape[0] != 2:
+                Y_train.drop(columns=column, inplace=True)
+                Y_test.drop(columns=column, inplace=True)
+                print('Drop {} because it is not binary'.format(column))
+
         # loop through all the models for each possible prediction, fit, output
-        for category in category_names:
+        print(40*'-')
+        print('Fitting model with grid search')
+        model = build_model()
+        model.fit(X_train, Y_train)
 
-            if Y_train[category].unique().shape[0] == 2:
-                print('Building model for:', category)
-                model = build_model()
+        best_params = model.best_params_
+        print('Best parameters were: \n')
+        print(best_params)
 
-                print('Training model for:', category)
-                model.fit(X_train, Y_train[category])
-                best_params = model.best_params_
-                print('Best parameters were \n', best_params)
+        test_model(model, Y_test, X_test)
 
-                print('Evaluating model for:', category)
-                evaluate_model(model, X_test, Y_test, category)
-
-                print('Saving model...\n    MODEL: {}'.format(model_filepath))
-                save_model(model, model_filepath, category)
-
-                print('Trained model for {} saved!'.format(category))
-
-            else:
-                print('Train data for {} does not have two categories'.format(category))
+        print('Saving model')
+        save_model(model, model_filepath)
+        with open(model_filepath + '_columns', 'w') as f:
+            for column in Y_train.columns:
+                f.write(column + '\n')
+        print('Model saved!')
 
     else:
         print('Please provide the filepath of the disaster messages database '

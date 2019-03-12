@@ -24,12 +24,6 @@ def tokenize(text):
     text = text.lower().strip()
     text = re.sub(r'[^a-zA-Z0-9]', ' ', text)
 
-    # extract and replace urls
-    url_regex = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
-    detected_urls = re.findall(url_regex, text)
-    for url in detected_urls:
-        text = text.replace(url, "urlplaceholder")
-
     # tokenize text
     tokens = word_tokenize(text)
 
@@ -134,12 +128,17 @@ def go():
     query = request.args.get('query', '')
 
     # load model
-    models = glob('models/*.pkl')
+    model_path = glob('models/*.pkl')[0]
     classification_results = {}
-    for model in models:
-        name = re.search(r'_(\w+).pkl', model).group(1)
-        model = joblib.load(model)
-        classification_results[name] = model.predict([query])[0]
+
+    model = joblib.load(model_path)
+    predictions = model.predict([query])[0]
+
+    # load column labels
+    with open('models/classifier_columns') as f:
+        lines = f.readlines()
+        for i, line in enumerate(lines):
+            classification_results[line] = predictions[i]
 
     # This will render the go.html Please see that file.
     return render_template(
