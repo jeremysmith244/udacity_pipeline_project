@@ -18,7 +18,14 @@ nltk.download(['punkt', 'wordnet'])
 
 
 def tokenize(text):
-    '''Takes string, normalizes, tokenizes, lemmatizes and returns string'''
+    '''Takes string, normalizes, tokenizes, lemmatizes and returns string
+
+    INPUT:
+    text -- a text string to transformed
+
+    OUPUT:
+    clean_tokens -- the cleaned, tokenized and lemmatized list of words
+    '''
     # normalize text to lowercase, drop punctuation
     text = text.lower().strip()
     text = re.sub(r'[^a-zA-Z0-9]', ' ', text)
@@ -30,18 +37,27 @@ def tokenize(text):
     lemmatizer = WordNetLemmatizer()
 
     # iterate through each token
-    clean_tokens = ''
+    clean_tokens = []
     for tok in tokens:
 
         # lemmatize tokens
         clean_tok = lemmatizer.lemmatize(tok)
-        clean_tokens = clean_tokens + clean_tok + ' '
+        clean_tokens.append(clean_tok)
 
     return clean_tokens
 
 
 def load_data(database_filepath):
-    '''Connect to db, extract and clean X, y and categories for fitting'''
+    '''Connect to db, extract and clean X, y and categories for training
+
+    INPUT:
+    database_filepath -- path to sql database with messages and categories
+
+    OUPUT:
+    X -- text inputs for training models
+    y -- dataframe with all the categories to be trained
+    category_names -- the labels for the categories
+    '''
     # load data from database
     engine = create_engine('sqlite:///{}'.format(database_filepath))
     df = pd.read_sql_table('messages', con=engine)
@@ -57,7 +73,14 @@ def load_data(database_filepath):
 
 
 def build_model():
-    '''Build gridsearch model around tfidf transformed randomforest'''
+    '''Build gridsearch model around tfidf transformed randomforest
+
+    INPUT:
+    None
+
+    OUPUT:
+    pipeline -- multioutput gridsearch random forest pipeline
+    '''
     # define parameters for grid search
     parameters = {
         'vect__stop_words': ['english'],
@@ -90,7 +113,16 @@ def build_model():
 
 
 def test_model(model, y_test, X_test):
+    '''Runs classification report on all categories
 
+    INPUT:
+    model -- multioutput gridsearch randomforest pipeline
+    y_test -- known data for testing
+    X_test -- input for model to predict
+
+    OUPUT:
+    None
+    '''
     y_preds = model.predict(X_test)
 
     for i, column in enumerate(y_test):
@@ -101,9 +133,16 @@ def test_model(model, y_test, X_test):
         print(classification_report(true_val, pred_val))
         print(40*'-')
 
+    pass
+
 
 def save_model(model, model_filepath):
-    '''Save model as pickle file'''
+    '''Save model as pickle file
+
+    INPUT:
+    model -- trained model
+    model_filepath -- location ot save the model
+    '''
     # save file for this model using pickle
     with open(model_filepath + '.pkl', 'wb') as picklefile:
         pickle.dump(model, picklefile)
@@ -111,7 +150,14 @@ def save_model(model, model_filepath):
 
 
 def main():
-    '''Solicit user input to run build, train, evaluate sequence'''
+    '''Solicit user input to run build, train, evaluate sequence
+
+    INPUT:
+    None
+
+    OUPUT:
+    None
+    '''
     # make sure appropriate input passed, load data and split
     if len(sys.argv) == 3:
         database_filepath, model_filepath = sys.argv[1:]

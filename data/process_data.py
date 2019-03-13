@@ -5,7 +5,15 @@ from sqlalchemy import create_engine
 
 
 def load_data(messages_filepath, categories_filepath):
-    '''Takes input files and returns dataframe'''
+    '''Takes input files and returns dataframe
+
+    INPUT:
+    messages_filepath -- path to the messages csv
+    categories_filepath -- path to the categories csv
+
+    OUPUT:
+    df -- a pandas datframe containing the merge of the files
+    '''
     messages = pd.read_csv(messages_filepath)
     categories = pd.read_csv(categories_filepath)
     df = messages.merge(categories, on='id')
@@ -14,7 +22,14 @@ def load_data(messages_filepath, categories_filepath):
 
 
 def clean_data(df):
-    '''Takes dataframe and cleans formating, returns cleaned df'''
+    '''Takes dataframe and cleans formating, returns cleaned df
+
+    INPUT:
+    df -- the dataframe containing categories and messages
+
+    OUPUT:
+    df -- the dataframe after extracting numerical outputs and labelling
+    '''
     # split the categories out into indvidual columns
     categories = df['categories'].str.split(';', expand=True)
 
@@ -41,7 +56,15 @@ def clean_data(df):
 
 
 def save_data(df, database_filename):
-    '''Takes clean dataframe and saves dataframe to sql database'''
+    '''Takes clean dataframe and saves dataframe to sql database
+
+    INPUT:
+    df -- the cleaned pandas dataframe
+    database_filename -- path to save the database file
+
+    OUTPUT:
+    None
+    '''
     # make conneciton to sql, save data as messages table
     engine = create_engine('sqlite:///{}.db'.format(database_filename))
     df.to_sql('messages', con=engine, index=False,
@@ -50,7 +73,14 @@ def save_data(df, database_filename):
 
 
 def main():
-    '''Solicit user input to run open, clean, save sequence'''
+    '''Solicit user input to run open, clean, save sequence
+
+    INPUT:
+    None
+
+    OUTPUT:
+    None
+    '''
     if len(sys.argv) == 4:
 
         messages_filepath, categories_filepath, database_filepath = sys.argv[1:]

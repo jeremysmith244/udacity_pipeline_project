@@ -19,7 +19,14 @@ app = Flask(__name__)
 
 
 def tokenize(text):
-    '''Takes string, normalizes, tokenizes, lemmatizes and returns string'''
+    '''Takes string, normalizes, tokenizes, lemmatizes and returns string
+
+    INPUT:
+    text -- a text string to transformed
+
+    OUPUT:
+    clean_tokens -- the cleaned, tokenized and lemmatized list of words
+    '''
     # normalize text to lowercase, drop punctuation
     text = text.lower().strip()
     text = re.sub(r'[^a-zA-Z0-9]', ' ', text)
@@ -31,12 +38,12 @@ def tokenize(text):
     lemmatizer = WordNetLemmatizer()
 
     # iterate through each token
-    clean_tokens = ''
+    clean_tokens = []
     for tok in tokens:
 
         # lemmatize tokens
         clean_tok = lemmatizer.lemmatize(tok)
-        clean_tokens = clean_tokens + clean_tok + ' '
+        clean_tokens.append(clean_tok)
 
     return clean_tokens
 
@@ -44,21 +51,28 @@ def tokenize(text):
 # connect to sql database, get data into pandas dataframe
 engine = create_engine('sqlite:///{}'.format('data/DisasterResponse.db'))
 df = pd.read_sql_table('messages', con=engine)
-X = df['message'].apply(tokenize)
+X = df['message']
 
 
 # index webpage displays cool visuals and receives user input text for model
 @app.route('/')
 @app.route('/index')
 def index():
-    '''Generates plotly visualizations for website'''
+    '''Generates plotly visualizations for website
+
+    INPUT:
+    None
+
+    OUTPUT:
+    None
+    '''
     # extract data needed for visual 1
     data = df.iloc[:, 4:]
     genre_counts = data.sum().values
     genre_names = data.columns
 
     # apply countvectorizer and pull top 20 words for visual 2
-    count = CountVectorizer(stop_words='english')
+    count = CountVectorizer(stop_words='english', tokenizer=tokenize)
     words = count.fit_transform(X)
     sum_words = words.sum(axis=0)
     words_freq_dict = [(word, sum_words[0, idx]) for word,
