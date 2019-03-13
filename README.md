@@ -44,11 +44,11 @@ This trained against 80% of the data, against an f_beta score of 3 to bias towar
 
 Metrics on test data is printed to the terminal.
 
-## File Three
+### File Three
 
 File three is a flask app, which outputs a couple summary graphs, and offers user ability to input text to classfy. If input, it then shows results of that classification.
 
-### Instructions
+## Instructions
 1. Run the following commands in the project's root directory to set up your database and model.
 
     - To run ETL pipeline that cleans data and stores in database
