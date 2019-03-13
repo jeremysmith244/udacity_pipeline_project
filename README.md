@@ -1,6 +1,8 @@
 # Disaster Response Pipeline Project
 
 ## Outline
+
+![homepage of app](/page1.jpg)
 This program takes data from Figure Eight, which are messages during a disaster
 response, with labelled categories, cleans the messages using a an ETL pipeline
 and then fits a RandomForestClassifier using a grid search. It then outputs
@@ -12,7 +14,9 @@ model, and one which controls the flask website. These are described below.
 
 Note that the fitting is heavily biased towards recall, since in a disaster situation you would rather not miss many important messages.
 
-Despite this the data is very unbalanced, and gives generally poor recall for most categories.
+The flask website will allow you to input a query and test the model for yourself!
+
+![classification of app](/page2.jpg)
 
 ## Dependencies
 json, plotly, pandas, nltk, flask, sklearn, sqlalchemy, sys, numpy, re, pickle
